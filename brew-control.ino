@@ -39,7 +39,7 @@ int key=-1;
 int setTemp;
 
 unsigned long switchTime;
-unsigned long time;
+unsigned long currentmillis;
 
 void setup(void)
 {
@@ -56,14 +56,14 @@ void setup(void)
 
 void loop(void)
 { 
-  time = millis();
+  currentmillis = millis();
   readkeys(); // Read keypad.
   sensors.requestTemperatures(); // Send the command to get temperatures
   float tempC = sensors.getTempC(tempDeviceAddress);
-  if(time-switchTime > 120000) { //Wait 2 Minutes to turn on/off the fridge.
   lcd.setCursor(0, 2);
   String strOut = "CT:" + String(tempC) + " ST:" + String(setTemp); 
   lcd.print(strOut);
+  if(currentmillis-switchTime > 120000) { //Wait 2 Minutes to turn on/off the fridge.
     if (tempC > setTemp){
       digitalWrite(COOLER, HIGH);  //Turn on the fridge
     }
@@ -96,8 +96,13 @@ void readkeys(void){
             setTemp--;          // decrese set temperature
             break;
           case 4:
-            lcd.setCursor(0, 2);
-            lcd.print("Running Time:" + String(time));
+            cleanLine(0);
+            lcd.print("Uptime");
+            cleanLine(2);
+            lcd.print(uptime());
+            delay(2000);
+            cleanLine(0);
+            lcd.print("Brew Control");
             break;
         }
     }
@@ -115,3 +120,29 @@ int get_key(unsigned int input)
   }
   return -1;
 }
+
+char *uptime() // Function made to millis() be an optional parameter
+{
+  return (char *)uptime(millis()); // call original uptime function with unsigned long millis() value
+}
+
+char *uptime(unsigned long milli)
+{
+  static char _return[32];
+  unsigned long secs=milli/1000, mins=secs/60;
+  unsigned int hours=mins/60, days=hours/24;
+  milli-=secs*1000;
+  secs-=mins*60;
+  mins-=hours*60;
+  hours-=days*24;
+  sprintf(_return,"%d days %2.2d:%2.2d:%2.2d", (byte)days, (byte)hours, (byte)mins, (byte)secs);
+  return _return;
+}
+
+void cleanLine(int line){
+   lcd.setCursor(0, line);
+   lcd.print("                ");
+   lcd.setCursor(0, line);
+}
+
+
