@@ -1,6 +1,6 @@
 #include <OneWire.h>
 #include <DallasTemperature.h>
-#include <LCD4Bit_mod.h> 
+#include <LiquidCrystal.h>
 
 //Temperature Sensor
 // Data wire is plugged into port 2 on the Arduino
@@ -22,8 +22,7 @@ DeviceAddress tempDeviceAddress;
 int COOLER = 12;
 
 //LCD
-//number of lines in display=2
-LCD4Bit_mod lcd = LCD4Bit_mod(2); 
+LiquidCrystal lcd(8, 9, 4, 5, 6, 7);
 
 //Possible Keys
 //30 Right Key - Key 0
@@ -44,9 +43,8 @@ unsigned long time;
 
 void setup(void)
 {
-  lcd.init();
-  lcd.clear();
-  lcd.printIn("Brew Contol");
+  lcd.begin(16, 2);
+  lcd.print("Brew Contol");
   sensors.begin();
   sensors.getAddress(tempDeviceAddress, 0);
 	// set the resolution to TEMPERATURE_PRECISION bit.
@@ -62,11 +60,10 @@ void loop(void)
   readkeys(); // Read keypad.
   sensors.requestTemperatures(); // Send the command to get temperatures
   float tempC = sensors.getTempC(tempDeviceAddress);
-  lcd.cursorTo(2, 0);  //line=2, x=0
-  String strOut = String("CT:") + String(tempC) + String(" ST:") + String(setTemp); 
-  strOut.toCharArray(tempMessage, 16);
-  lcd.printIn(tempMessage);
   if(time-switchTime > 120000) { //Wait 2 Minutes to turn on/off the fridge.
+  lcd.setCursor(0, 2);
+  String strOut = "CT:" + String(tempC) + " ST:" + String(setTemp); 
+  lcd.print(strOut);
     if (tempC > setTemp){
       digitalWrite(COOLER, HIGH);  //Turn on the fridge
     }
@@ -99,10 +96,8 @@ void readkeys(void){
             setTemp--;          // decrese set temperature
             break;
           case 4:
-            lcd.cursorTo(1, 0);
-            String strOut = String("Running Time:") + String(time); 
-            strOut.toCharArray(tempMessage, 16);
-            lcd.printIn(tempMessage);
+            lcd.setCursor(0, 2);
+            lcd.print("Running Time:" + String(time));
             break;
         }
     }
